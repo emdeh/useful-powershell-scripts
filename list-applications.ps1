@@ -14,8 +14,6 @@ function Analyze( $p, $f) {
     }
 }
 $s = @()
-$s += Analyze ‘HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*’ 64
-$s += Analyze ‘HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\
-Uninstall\*’ 32
-$s | Sort-Object -Property Name
-
+$s += Analyze 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' 64
+$s += Analyze 'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' 32
+$s | Sort-Object -Property Name | Out-File -FilePath "C:\tmp\application-list.txt"
