@@ -1,5 +1,8 @@
-# output a list of installed applications with registered uninstall functionality
-# from ASD Essential Eight material
+<# PowerShell Script to list applications applications with registered uninstall functionality. 
+
+It should be combined with the list of installed applications within ‘Control Panel – Programs – Programs and Features’ to get cover all applications installed on a system. 
+
+If any key applications appear to be missing in the reports provided, this should be raised for clarification. #>
 
 function Analyze( $p, $f) {
     Get-ItemProperty $p |foreach {
