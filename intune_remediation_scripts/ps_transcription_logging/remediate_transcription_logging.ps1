@@ -7,7 +7,7 @@
     
     This script alone is not enough. You should also consider setting file system auditing (Local Security Policy > Advanced Audit Policy Configuration > Object Access > Audit File System) and apply appropriate file system controls on the outputDirectory folder.
 
-    See additional scripting at set_outputdir_acl.ps1
+    See additional scripting at https://github.com/emdeh/useful-powershell-scripts/blob/main/intune_remediation_scripts/ps_transcription_logging/set_outputdir_acl.ps1
 
     Author: emdeh
     Version: 1.0.0
