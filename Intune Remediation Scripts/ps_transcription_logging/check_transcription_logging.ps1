@@ -6,7 +6,7 @@
     PowerShell Transcription captures the full command line input and output of PowerShell sessions, which can help detect abuse and support forensic investigations.
     
     Author: emdeh
-    Version: 1.1.0
+    Version: 1.0.0
 #>
 
 $regKey = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription'

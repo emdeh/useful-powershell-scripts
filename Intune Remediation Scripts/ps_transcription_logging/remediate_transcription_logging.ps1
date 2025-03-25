@@ -5,10 +5,12 @@
 
     PowerShell Transcription captures the full command line input and output of PowerShell sessions, which can help detect abuse and support forensic investigations.
     
-    This script alone is not enough. You also need to create a transcription log output file, and should consider setting file system auditing (Local Security Policy > Advanced Audit Policy Configuration > Object Access > Audit File System).
+    This script alone is not enough. You should also consider setting file system auditing (Local Security Policy > Advanced Audit Policy Configuration > Object Access > Audit File System) and apply appropriate file system controls on the outputDirectory folder.
+
+    See additional scripting at set_outputdir_acl.ps1
 
     Author: emdeh
-    Version: 1.1.0
+    Version: 1.0.0
 #>
 
 $regKey = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription'
