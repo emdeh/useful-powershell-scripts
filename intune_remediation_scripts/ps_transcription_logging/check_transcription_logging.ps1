@@ -3,6 +3,8 @@
     Checks if the Transcription registry key is set to specified values.
     Returns exit code 0 if compliant, 1 if non-compliant or any error.
 
+    Consider using Intune Configuration settings or Intune to set Transcription Logging.
+
     PowerShell Transcription captures the full command line input and output of PowerShell sessions, which can help detect abuse and support forensic investigations.
     
     Author: emdeh

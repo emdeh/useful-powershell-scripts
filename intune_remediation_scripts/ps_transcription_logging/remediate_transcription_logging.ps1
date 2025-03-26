@@ -4,6 +4,7 @@
     Creates or updates the keys and returns exit code 0 on success, 1 on failure.
 
     PowerShell Transcription captures the full command line input and output of PowerShell sessions, which can help detect abuse and support forensic investigations.
+    Consider using Intune Configuration settings or Intune instead of this remediation script.
     
     This script alone is not enough. You should also consider setting file system auditing (Local Security Policy > Advanced Audit Policy Configuration > Object Access > Audit File System) and apply appropriate file system controls on the outputDirectory folder.
 

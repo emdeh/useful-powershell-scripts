@@ -3,7 +3,7 @@
     Ensures the outputDirectory for PowerShell Transcription has the appropriate
     permissions set.
 
-    You should also set file system auditing (Local Security Policy > 
+    You should also consider setting file system auditing (Local Security Policy > 
     Advanced Audit Policy Configuration > Object Access > Audit File System).
 
     Author: emdeh
@@ -15,7 +15,7 @@ $folder = "C:\Logs\PowerShellTranscripts"
 # 1. Check if the folder exists
 try {
     if (-not (Test-Path $folder)) {
-        Write-Output "Folder path does not exist. Has the registry values been set?"
+        Write-Output "Folder path does not exist. Has the registry values or Intune configuration been set?"
         exit 1
     }
 }
