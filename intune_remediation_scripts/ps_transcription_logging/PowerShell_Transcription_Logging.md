@@ -1,72 +1,32 @@
-# PowerShell Transcription Logging Implementation Approach
+This change relates to a User Application Hardening strategy control about PowerShell Transcription Logging.
 
-## Background and Objective
-> [Please see Securing PowerShell in the enterprise for latest advice](https://www.cyber.gov.au/resources-business-and-government/maintaining-devices-and-systems/system-hardening-and-administration/system-administration/securing-powershell-enterprise]).
+For more information, please see ASD's article on [Securing PowerShell in the enterprise](https://www.cyber.gov.au/resources-business-and-government/maintaining-devices-and-systems/system-hardening-and-administration/system-administration/securing-powershell-enterprise). This change only deals with the transcription component.
 
-Implementing PowerShell transcription logging aligns with Essential Eight recommendations by capturing detailed records of PowerShell activity across endpoints. The goal is to improve detection and forensic capabilities for cybersecurity incidents involving PowerShell.
-
-Transcription logging records the complete input/output of PowerShell sessions. Log file access permissions must be secured, [and ideally audited](https://www.cyber.gov.au/resources-business-and-government/maintaining-devices-and-systems/system-hardening-and-administration/system-administration/securing-powershell-enterprise#:~:text=Attempts%20to%20modify%20the%20registry,host%20execution%2C%20should%20be%20investigated) to enable comprehensive forensic investigations. 
-
-PowerShell transcripts are plain text files that will accumulate over time on each endpoint. Without a SIEM or log management system to ingest them centrally, a plan for managing those files on disk is required – both to avoid running out of space and to ensure older logs are archived or disposed appropriately.
-
-## Implementation Overview
-This implementation will use:
-- Intune Settings Catalog (Administrative Templates) for enabling transcription logging.
-- Intune Remediation scripts for ensuring folder permissions.
-- Two optional methods for log cleanup: a remediation script or a scheduled task.
-- Optional file-system auditing via Local Security Policy.
-
-## Implementation Steps
-
-### Step 1: Enable PowerShell Transcription (Settings Catalog)
-1. In Intune, navigate to Endpoint Security > Configuration Profiles.
-- Create a new profile:
-- Platform: Windows 10 and later
-- Profile type: Settings catalog
-
-2. Add settings:
-- Navigate to Administrative Templates > Windows Components > Windows PowerShell
-- Set Turn on PowerShell Transcription: Enabled
-- Set Transcript output directory: C:\Logs\PowerShellTranscripts
-- Set Include invocation headers: Enabled
-
-3. Assign this policy to relevant device groups.
-
-### Step 2: Remediation Script – Folder Permissions
-Create a remediation script in Intune (Proactive Remediation):
-
-1. Detection Script (check permissions exist).
-
-Implement [a script](/intune_remediation_scripts/ps_transcription_logging/check_log_folder_exists.ps1) to check for the existence of the `Logs/PowerShellTranscripts` directory.
-
-2. Remediation Script (set permissions):
-
-Implement [a script](/intune_remediation_scripts/ps_transcription_logging/set_log_folder_acl.ps1) to validate correct NTFS and audit permissions on the `Logs/PowerShellTranscripts` directory.
-
-3. Assign these scripts to device groups, running at least daily.
-
-### Step 3: Log Cleanup Strategy 
-
-TBC
-
-### Optional: File System Auditing
-File auditing adds tamper detection:
-
-For GPO-managed environments, use Advanced Audit Policy Configuration in GPO to set `(Local Security Policy > Advanced Audit Policy Configuration > Object Access > Audit File System)`
-
-## Justification & Best Practices
-- Transcription ensures all PowerShell activity is logged, aligning with ACSC and Essential Eight recommendations.
-- Folder permissions secure logs from tampering, especially denying creators from modifying/deleting their own transcripts.
-- Log cleanup mitigates disk storage issues, especially critical without centralized log management (SIEM).
-- File Auditing provides visibility into unauthorized access or deletion, enhancing detection capabilities.
+## Deployment approach
+Transcription Logging can be turned on via an [Intune device configuration policy](https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-admx-powershellexecutionpolicy?WT.mc_id=Portal-fx#enabletranscripting)
 
 
-## Future Improvements
-### Centralised Logging
-- Evaluate options to centralise PowerShell transcription logs to enhance visibility and response capabilities.
-- Consider connectivity constraints, noting endpoints only have direct access to Azure-based "on-prem" resources when physically in the office.
+This policy lets you apply the following equivalent registry settings:
+```bash
+Key = `HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription`
+EnableTranscripting = 1 # (REG_DWORD)
+EnableInvocationHeader  = 1 # (REG_DWORD)
+OutputDirectory = C:\Path\To\Desired\Directory # (REG_SZ)
+```
+## OutputDirectory
+The policy will create the `OutputDirectory`. [Microsoft's documentation](https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-admx-powershellexecutionpolicy?WT.mc_id=Portal-fx#admx-powershellexecutionpolicy-enabletranscripting:~:text=will%20record%20transcript%20output%20to%20each%20users%27%20My%20Documents%20directory%2C%20with%20a%20file%20name%20that%20includes%20%27PowerShell_transcript%27) sets the default log path to the user's `My Documents` folder. 
 
-> In the interim, leverage Defender XDR's Live Response feature to manually retrieve logs from endpoints, provided there is connectivity.
+This might not be suitable for every context. Especially if the location syncs to a OneDrive and you intend to apply future controls to protect the directory and preserve forensic integrity.
 
-### Long-Term Strategy
-Plan for implementing a Security Information and Event Management (SIEM) solution to automate centralised log collection and analysis.
+## Controlling log bloat
+PowerShell transcription log settings do not natively support log size limits or rollover. While it's unlikely the log directory will grow rapidly, the detection and remediation scripts in this folder can be used to manage this aspect.
+
+The detection script will check if the directory exceeds a specified size (e.g. 10000 KB). If so, the remediation script triggers to delete the transcript subfolders older than 90 days.
+
+The size threshold and retention period can be adjusted based on volume and ideally to align with other log retention requirements. During testing, intentionally low limits can be used to validate the logic of the scripts.
+
+## Future improvements
+While this change implements transcription logging, additional improvements will maximise the forensic value of transcription logs. Consider:
+- Restricting permissions on the transcript directory to prevent tampering.
+- Enabling auditing on the directory to monitor access and changes.
+- Shipping logs off-host (subject to SIEM or log-store infrastructure).
