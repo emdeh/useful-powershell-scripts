@@ -2,7 +2,7 @@
 .DESCRIPTION
     Checks if the PowerShell Transcripts folder size exceeds 10000 KB.
     Returns exit code 0 if compliant or not applicable, 1 if non-compliant or error.
-    Author: Michael de Heaume
+    Author: emdeh
     Version: 1.0.1
 #>
 
