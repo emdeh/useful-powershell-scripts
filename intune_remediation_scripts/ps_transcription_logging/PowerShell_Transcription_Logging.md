@@ -21,9 +21,18 @@ This might not be suitable for every context. Especially if the location syncs t
 ## Controlling log bloat
 PowerShell transcription log settings do not natively support log size limits or rollover. While it's unlikely the log directory will grow rapidly, the detection and remediation scripts in this folder can be used to manage this aspect.
 
-The detection script will check if the directory exceeds a specified size (e.g. 10000 KB). If so, the remediation script triggers to delete the transcript subfolders older than 90 days.
+The [detection script](/intune_remediation_scripts/ps_transcription_logging/detectTranscriptLogOversize.ps1) will check if the directory exceeds a specified size (e.g. 10000 KB). If so, the [remediation script](/intune_remediation_scripts/ps_transcription_logging/remediateTranscriptLogOversize.ps1) triggers to delete the transcript subfolders older than 90 days.
 
 The size threshold and retention period can be adjusted based on volume and ideally to align with other log retention requirements. During testing, intentionally low limits can be used to validate the logic of the scripts.
+
+### Remediation script settings
+```
+Detection script = Yes
+Remediation script = Yes
+Run this script using the logged-on credentials = Yes
+Enforce script signature check = No
+Run script in 64-bit PowerShell = Yes
+```
 
 ## Future improvements
 While this change implements transcription logging, additional improvements will maximise the forensic value of transcription logs. Consider:
