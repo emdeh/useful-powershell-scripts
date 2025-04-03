@@ -1,9 +1,9 @@
 <#
 .DESCRIPTION
-    Deletes all subfolders under the PowerShell Transcripts folder that are older than XX days.
+    Deletes all subfolders under the PowerShell Transcripts folder that were created more than XX days.
     Returns exit code 0 on success, 1 on error.
     Author: emdeh
-    Version: 1.0.0
+    Version: 1.1.0
 #>
 
 $folderPath = 'C:\ProgramData\Logs\PowerShellTranscripts'
@@ -18,7 +18,7 @@ try {
     $threshold = (Get-Date).AddDays(-$daysOld)
 
     Get-ChildItem -Path $folderPath -Directory -Force -ErrorAction Stop | Where-Object {
-        $_.LastWriteTime -lt $threshold
+        $_.CreationTime -le $threshold
     } | ForEach-Object {
         Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction Stop
         Write-Output "Deleted folder: $($_.FullName)"
