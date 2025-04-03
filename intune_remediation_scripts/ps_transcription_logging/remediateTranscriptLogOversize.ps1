@@ -15,7 +15,7 @@ try {
         exit 0
     }
 
-    $threshold = (Get-Date).AddDays(-$daysOld)
+    $threshold = (Get-Date).Date.AddDays(-$daysOld)
 
     Get-ChildItem -Path $folderPath -Directory -Force -ErrorAction Stop | Where-Object {
         $_.CreationTime -le $threshold
