@@ -7,7 +7,7 @@
 #>
 
 $folderPath = 'C:\ProgramData\Logs\PowerShellTranscripts'
-$daysOld = 1
+$daysOld = 90
 
 try {
     if (-not (Test-Path $folderPath)) {

@@ -7,7 +7,7 @@
 #>
 
 $folderPath = 'C:\ProgramData\Logs\PowerShellTranscripts'
-$maxSizeKB = 75
+$maxSizeKB = 100000
 
 try {
     if (-not (Test-Path $folderPath)) {
