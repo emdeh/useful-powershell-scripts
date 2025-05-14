@@ -1,18 +1,24 @@
 <#
 .DESCRIPTION
     Intune Remediation: Remove all per-user Cisco Webex installs.
-    - Kills running Webex processes under user profile
+    - Terminates running Webex processes under user profile
     - Attempts silent MSI uninstalls for all HKCU uninstall entries
     - Deletes remaining Webex folders in LOCALAPPDATA/APPDATA
     - Removes HKCU uninstall registry keys
     - Clears any Webex auto-start (Run) entries
+    - Cleans up start menu entries
+    - Delete Webex-related shortcuts from Desktop
+    - Remove Webex installer files from Downloads if present
+
     Returns 0 on success, 1 on error.
     Author: emdeh
     Version: 1.1.2
 #>
 
 try {
-    ## Step 1: Identify per-user Webex installs
+    ##───────────────────────────────────────────────────────────────
+    ## Step 1: Identify per-user Webex installs based on common paths.
+    ##───────────────────────────────────────────────────────────────
     $paths = @(
         "$env:LOCALAPPDATA\Programs\Cisco Spark",
         "$env:LOCALAPPDATA\CiscoSpark",
@@ -23,7 +29,7 @@ try {
     $foundPaths = $paths | Where-Object { Test-Path $_ }
 
     $uninstallRoot = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
-    $nameRegex     = '(?i)webex|cisco spark'
+    $nameRegex = '(?i)webex|cisco spark'
     $foundRegs = Get-ItemProperty -Path $uninstallRoot -ErrorAction SilentlyContinue |
         Where-Object {
             ($_.DisplayName     -match $nameRegex) -or
@@ -38,7 +44,9 @@ try {
     Write-Output "Detected Webex folders: $($foundPaths -join ', ')"
     Write-Output "Detected uninstall entries: $($foundRegs.Count)"
 
+    ##───────────────────────────────────────────────────────────────
     ## Step 2: Terminate any Webex processes running from those folders
+    ##───────────────────────────────────────────────────────────────
     $allProcs = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path }
     $toStop = $allProcs | Where-Object {
         foreach ($wp in $foundPaths) {
@@ -59,7 +67,9 @@ try {
         Write-Output 'No running Webex processes to stop.'
     }
 
+    ##───────────────────────────────────────────────────────────────
     ## Step 3: Silent MSI uninstall for each detected registry entry
+    ##───────────────────────────────────────────────────────────────
     foreach ($reg in $foundRegs) {
         $dispName = if ($reg.DisplayName) { $reg.DisplayName } else { $reg.PSChildName }
         $uninst   = $reg.UninstallString
@@ -82,7 +92,9 @@ try {
         }
     }
 
+    ##───────────────────────────────────────────────────────────────
     ## Step 4a: Delete all detected Webex folders
+    ##───────────────────────────────────────────────────────────────
     foreach ($path in $foundPaths) {
         if (Test-Path $path) {
             Write-Output "Deleting folder: $path"
@@ -98,7 +110,9 @@ try {
         }
     }
 
+    ##───────────────────────────────────────────────────────────────
     ## Step 4b: Remove all HKCU uninstall registry keys
+    ##───────────────────────────────────────────────────────────────
     foreach ($reg in $foundRegs) {
         $keyPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$($reg.PSChildName)"
         Write-Output "Removing registry key: $keyPath"
@@ -110,7 +124,9 @@ try {
         }
     }
 
+    ##───────────────────────────────────────────────────────────────
     ## Step 4c: Remove Webex auto-start entries
+    ##───────────────────────────────────────────────────────────────
     $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
     $runValues = Get-ItemProperty -Path $runKey -ErrorAction SilentlyContinue |
         Get-Member -MemberType NoteProperty |
@@ -127,7 +143,9 @@ try {
         }
     }
 
+    ##───────────────────────────────────────────────────────────────
     ## Step 5: Clean up Start Menu entries and folder
+    ##───────────────────────────────────────────────────────────────
     $startMenu  = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
     $patterns   = '*webex*.lnk','*spark*.lnk','*cisco*.lnk'
 
@@ -138,14 +156,18 @@ try {
             Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
         }
 
+    ##───────────────────────────────────────────────────────────────
     # 5b) Remove the Webex start-menu folder if present
+    ##───────────────────────────────────────────────────────────────
     $webexFolder = Join-Path $startMenu 'Webex'
     if (Test-Path $webexFolder) {
         Write-Output "Removing Start Menu folder: $webexFolder"
         Remove-Item -Path $webexFolder -Recurse -Force -ErrorAction SilentlyContinue
     }
 
+    ##───────────────────────────────────────────────────────────────
     ## Step 6: Delete Webex-related shortcuts from Desktop
+    ##───────────────────────────────────────────────────────────────
     $desktop = [Environment]::GetFolderPath('Desktop')
     $shortcutPatterns = '*.lnk'
 
@@ -157,8 +179,9 @@ try {
         }
 
 
-    ## Step 7: Remove any Webex installer packages from Downloads
+    ##───────────────────────────────────────────────────────────────
     ## Step 7: Recursively remove Webex installer files from Downloads
+    ##───────────────────────────────────────────────────────────────
     $dlRoot = Join-Path $env:USERPROFILE 'Downloads'
     Get-ChildItem -Path $dlRoot -Recurse -Include '*.msi','*.exe' -File -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -match '(?i)webex|spark|wbx|meetings' } |
