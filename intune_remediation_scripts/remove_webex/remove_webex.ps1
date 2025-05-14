@@ -127,25 +127,45 @@ try {
         }
     }
 
-    # Step 5: Delete Webex shortcuts from Start Menu
-    $startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
-    # Look for any .lnk whose name contains “webex”, “spark”, or “cisco”
-    $shortcutPatterns = '*webex*.lnk','*spark*.lnk','*cisco*.lnk'
+    ## Step 5: Clean up Start Menu entries and folder
+    $startMenu  = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
+    $patterns   = '*webex*.lnk','*spark*.lnk','*cisco*.lnk'
 
-    $shortcuts = Get-ChildItem -Path $startMenu -Recurse -Include $shortcutPatterns -ErrorAction SilentlyContinue
-    foreach ($sc in $shortcuts) {
-    Write-Output "Removing Start Menu shortcut: $($sc.FullName)"
-    Remove-Item -Path $sc.FullName -Force -ErrorAction SilentlyContinue
+    # 5a) Remove any .lnk shortcuts
+    Get-ChildItem -Path $startMenu -Recurse -Include $patterns -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            Write-Output "Removing Start Menu shortcut: $($_.FullName)"
+            Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
+        }
+
+    # 5b) Remove the Webex start-menu folder if present
+    $webexFolder = Join-Path $startMenu 'Webex'
+    if (Test-Path $webexFolder) {
+        Write-Output "Removing Start Menu folder: $webexFolder"
+        Remove-Item -Path $webexFolder -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    ## Step 6: Remove any Webex installer packages from Downloads
-    $dl = Join-Path $env:USERPROFILE 'Downloads'
-    Get-ChildItem -Path $dl -Include '*.msi','*.exe' -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -match '(?i)webex|spark' } |
+    ## Step 6: Delete Webex-related shortcuts from Desktop
+    $desktop = [Environment]::GetFolderPath('Desktop')
+    $shortcutPatterns = '*.lnk'
+
+    Get-ChildItem -Path $desktop -Filter $shortcutPatterns -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match '(?i)webex|spark|wbx|meetings' } |
+        ForEach-Object {
+            Write-Output "Removing desktop shortcut: $($_.FullName)"
+            Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
+        }
+
+
+    ## Step 7: Remove any Webex installer packages from Downloads
+    ## Step 7: Recursively remove Webex installer files from Downloads
+    $dlRoot = Join-Path $env:USERPROFILE 'Downloads'
+    Get-ChildItem -Path $dlRoot -Recurse -Include '*.msi','*.exe' -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match '(?i)webex|spark|wbx|meetings' } |
         ForEach-Object {
             Write-Output "Removing installer from Downloads: $($_.FullName)"
             Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
-        }
+    }
 
     Write-Output 'Remediation complete: exiting with code 0.'
     exit 0
