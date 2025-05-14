@@ -77,7 +77,7 @@ try {
                           -ErrorAction SilentlyContinue
         }
         else {
-            Write-Output "▶ No silent MSI uninstall for $dispName – will clean up manually."
+            Write-Output "No silent MSI uninstall for $dispName will clean up manually."
         }
     }
 
