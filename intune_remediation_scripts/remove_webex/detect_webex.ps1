@@ -9,16 +9,19 @@
 #>
 
 # Known per-user install locations
-$sparkPath    = "$env:LOCALAPPDATA\Programs\Cisco Spark"       # Webex App
+$sparkPathOne = "$env:LOCALAPPDATA\Programs\Cisco Spark"       # Webex App
+$sparkPathTwo = "$env:LOCALAPPDATA\CiscoSpark"
 $meetingsPath = "$env:LOCALAPPDATA\WebEx"                     # Webex Meetings client
 $roamingPath  = "$env:APPDATA\Webex"                          # Roaming data
 $launcherPath = "$env:LOCALAPPDATA\CiscoSparkLauncher"        # Updater cache
+
 
 $found = $false
 
 try {
     # 1) Folder checks
-    if (Test-Path $sparkPath)    { $found = $true; Write-Output "Webex App folder found: $sparkPath" }
+    if (Test-Path $sparkPathOne)    { $found = $true; Write-Output "Webex App folder found: $sparkPathOne" }
+    if (Test-Path $sparkPathTwo)    { $found = $true; Write-Output "Webex App folder found: $sparkPathTwo" }
     if (Test-Path $meetingsPath) { $found = $true; Write-Output "Webex Meetings folder found: $meetingsPath" }
     if (Test-Path $roamingPath)  { $found = $true; Write-Output "Roaming Webex data found: $roamingPath" }
     if (Test-Path $launcherPath) { $found = $true; Write-Output "CiscoSparkLauncher folder found: $launcherPath" }

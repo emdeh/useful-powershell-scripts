@@ -15,6 +15,7 @@ try {
     ## Step 1: Identify per-user Webex installs
     $paths = @(
         "$env:LOCALAPPDATA\Programs\Cisco Spark",
+        "$env:LOCALAPPDATA\CiscoSpark",
         "$env:LOCALAPPDATA\WebEx",
         "$env:APPDATA\Webex",
         "$env:LOCALAPPDATA\CiscoSparkLauncher"
@@ -125,6 +126,26 @@ try {
             Write-Output "[WARN] Failed to remove auto-start value ${val}: $_"
         }
     }
+
+    # Step 5: Delete Webex shortcuts from Start Menu
+    $startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
+    # Look for any .lnk whose name contains “webex”, “spark”, or “cisco”
+    $shortcutPatterns = '*webex*.lnk','*spark*.lnk','*cisco*.lnk'
+
+    $shortcuts = Get-ChildItem -Path $startMenu -Recurse -Include $shortcutPatterns -ErrorAction SilentlyContinue
+    foreach ($sc in $shortcuts) {
+    Write-Output "Removing Start Menu shortcut: $($sc.FullName)"
+    Remove-Item -Path $sc.FullName -Force -ErrorAction SilentlyContinue
+    }
+
+    ## Step 6: Remove any Webex installer packages from Downloads
+    $dl = Join-Path $env:USERPROFILE 'Downloads'
+    Get-ChildItem -Path $dl -Include '*.msi','*.exe' -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match '(?i)webex|spark' } |
+        ForEach-Object {
+            Write-Output "Removing installer from Downloads: $($_.FullName)"
+            Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
+        }
 
     Write-Output 'Remediation complete: exiting with code 0.'
     exit 0
