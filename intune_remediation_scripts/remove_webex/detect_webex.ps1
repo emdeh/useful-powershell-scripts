@@ -5,7 +5,7 @@
     Returns exit code 0 if no user-context Webex is found (compliant / not-applicable),
     or exit code 1 if at least one user-context Webex install is detected.
     Author: emdeh
-    Version: 1.0.1
+    Version: 2.0.0
 #>
 
 # Known per-user install locations

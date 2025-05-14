@@ -12,7 +12,7 @@
 
     Returns 0 on success, 1 on error.
     Author: emdeh
-    Version: 1.1.2
+    Version: 2.0.0
 #>
 
 try {
