@@ -8,11 +8,11 @@
     - Clears any Webex auto-start (Run) entries
     Returns 0 on success, 1 on error.
     Author: emdeh
-    Version: 1.1.1
+    Version: 1.1.2
 #>
 
 try {
-    ## Step 1: Identify all user-context Webex instances
+    ## Step 1: Identify per-user Webex installs
     $paths = @(
         "$env:LOCALAPPDATA\Programs\Cisco Spark",
         "$env:LOCALAPPDATA\WebEx",
@@ -37,7 +37,7 @@ try {
     Write-Output "Detected Webex folders: $($foundPaths -join ', ')"
     Write-Output "Detected uninstall entries: $($foundRegs.Count)"
 
-    ## Step 2: Terminate running Webex processes under those paths
+    ## Step 2: Terminate any Webex processes running from those folders
     $allProcs = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path }
     $toStop = $allProcs | Where-Object {
         foreach ($wp in $foundPaths) {
@@ -58,7 +58,7 @@ try {
         Write-Output 'No running Webex processes to stop.'
     }
 
-    ## Step 3: Loop through all uninstall entries for silent MSI removal
+    ## Step 3: Silent MSI uninstall for each detected registry entry
     foreach ($reg in $foundRegs) {
         $dispName = if ($reg.DisplayName) { $reg.DisplayName } else { $reg.PSChildName }
         $uninst   = $reg.UninstallString
@@ -81,8 +81,7 @@ try {
         }
     }
 
-    ## Step 4: Manual cleanup of folders, registry keys, and auto-start
-    # 4a) Delete all detected folders
+    ## Step 4a: Delete all detected Webex folders
     foreach ($path in $foundPaths) {
         if (Test-Path $path) {
             Write-Output "Deleting folder: $path"
@@ -98,7 +97,7 @@ try {
         }
     }
 
-    # 4b) Remove all HKCU uninstall registry keys
+    ## Step 4b: Remove all HKCU uninstall registry keys
     foreach ($reg in $foundRegs) {
         $keyPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$($reg.PSChildName)"
         Write-Output "Removing registry key: $keyPath"
@@ -110,7 +109,7 @@ try {
         }
     }
 
-    # 4c) Clear any Webex auto-start entries under HKCU Run
+    ## Step 4c: Remove Webex auto-start entries
     $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
     $runValues = Get-ItemProperty -Path $runKey -ErrorAction SilentlyContinue |
         Get-Member -MemberType NoteProperty |
