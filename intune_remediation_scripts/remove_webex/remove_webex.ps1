@@ -8,15 +8,13 @@
     - Clears any Webex auto-start (Run) entries
     Returns 0 on success, 1 on error.
     Author: emdeh
-    Version: 1.1.0
+    Version: 1.1.1
 #>
 
 try {
-    ##───────────────────────────────────────────────────────────────
     ## Step 1: Identify all user-context Webex instances
-    ##───────────────────────────────────────────────────────────────
     $paths = @(
-        "$env:LOCALAPPDATA\Programs\Cisco Spark", 
+        "$env:LOCALAPPDATA\Programs\Cisco Spark",
         "$env:LOCALAPPDATA\WebEx",
         "$env:APPDATA\Webex",
         "$env:LOCALAPPDATA\CiscoSparkLauncher"
@@ -39,9 +37,7 @@ try {
     Write-Output "Detected Webex folders: $($foundPaths -join ', ')"
     Write-Output "Detected uninstall entries: $($foundRegs.Count)"
 
-    ##───────────────────────────────────────────────────────────────
     ## Step 2: Terminate running Webex processes under those paths
-    ##───────────────────────────────────────────────────────────────
     $allProcs = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path }
     $toStop = $allProcs | Where-Object {
         foreach ($wp in $foundPaths) {
@@ -62,9 +58,7 @@ try {
         Write-Output 'No running Webex processes to stop.'
     }
 
-    ##───────────────────────────────────────────────────────────────
     ## Step 3: Loop through all uninstall entries for silent MSI removal
-    ##───────────────────────────────────────────────────────────────
     foreach ($reg in $foundRegs) {
         $dispName = if ($reg.DisplayName) { $reg.DisplayName } else { $reg.PSChildName }
         $uninst   = $reg.UninstallString
@@ -87,9 +81,7 @@ try {
         }
     }
 
-    ##───────────────────────────────────────────────────────────────
     ## Step 4: Manual cleanup of folders, registry keys, and auto-start
-    ##───────────────────────────────────────────────────────────────
     # 4a) Delete all detected folders
     foreach ($path in $foundPaths) {
         if (Test-Path $path) {
@@ -98,7 +90,7 @@ try {
                 Remove-Item -Path $path -Recurse -Force -ErrorAction Stop
             }
             catch {
-                Write-Output "⚠ Failed to delete $path: $_"
+                Write-Output "[WARN] Failed to delete ${path}: $_"
             }
         }
         else {
@@ -114,7 +106,7 @@ try {
             Remove-Item -Path $keyPath -Recurse -Force -ErrorAction Stop
         }
         catch {
-            Write-Output "⚠ Failed to remove registry key $keyPath: $_"
+            Write-Output "[WARN] Failed to remove registry key ${keyPath}: $_"
         }
     }
 
@@ -131,7 +123,7 @@ try {
             Remove-ItemProperty -Path $runKey -Name $val -ErrorAction Stop
         }
         catch {
-            Write-Output "⚠ Failed to remove auto-start value $val: $_"
+            Write-Output "[WARN] Failed to remove auto-start value ${val}: $_"
         }
     }
 
