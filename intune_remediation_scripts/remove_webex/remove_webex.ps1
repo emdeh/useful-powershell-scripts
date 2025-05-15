@@ -67,6 +67,15 @@ try {
         Write-Output 'No running Webex processes to stop.'
     }
 
+    #─────────────────────────────────────────────────────────────────
+    # Additional: explicitly kill any CiscoCollabHost.exe instances
+    #─────────────────────────────────────────────────────────────────
+    Get-Process -Name CiscoCollabHost -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            Write-Output "Stopping leftover CiscoCollabHost.exe (PID $($_.Id))"
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+
     ##───────────────────────────────────────────────────────────────
     ## Step 3: Silent MSI uninstall for each detected registry entry
     ##───────────────────────────────────────────────────────────────
