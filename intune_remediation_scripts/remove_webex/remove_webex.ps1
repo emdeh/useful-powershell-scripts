@@ -12,7 +12,7 @@
 
     Returns 0 on success, 1 on error.
     Author: emdeh
-    Version: 2.0.2
+    Version: 2.0.3
 #>
 
 try {
@@ -95,6 +95,22 @@ try {
     while ( Get-Process -Name CiscoCollabHost -ErrorAction SilentlyContinue ) {
         Write-Output 'Waiting for CiscoCollabHost.exe to terminate…'
         Stop-Process -Name CiscoCollabHost -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Milliseconds 500
+    }
+
+    #─────────────────────────────────────────────────────────────────
+    # Step 2d: explicitly terminate any atmgr.exe instances
+    #─────────────────────────────────────────────────────────────────
+    Get-Process -Name atmgr -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            Write-Output "Stopping leftover atmgr.exe (PID $($_.Id))"
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    
+    # wait for any atmgr.exe to exit
+    while ( Get-Process -Name atmgr -ErrorAction SilentlyContinue ) {
+        Write-Output 'Waiting for atmgr.exe to terminate…'
+        Stop-Process -Name atmgr -Force -ErrorAction SilentlyContinue
         Start-Sleep -Milliseconds 500
     }
 
