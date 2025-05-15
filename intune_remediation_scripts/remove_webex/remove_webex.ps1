@@ -12,7 +12,7 @@
 
     Returns 0 on success, 1 on error.
     Author: emdeh
-    Version: 2.0.1
+    Version: 2.0.2
 #>
 
 try {
@@ -45,7 +45,7 @@ try {
     Write-Output "Detected uninstall entries: $($foundRegs.Count)"
 
     ##───────────────────────────────────────────────────────────────
-    ## Step 2: Terminate any Webex processes running from those folders
+    ## Step 2a: Terminate any Webex processes running from those folders
     ##───────────────────────────────────────────────────────────────
     $allProcs = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path }
     $toStop = $allProcs | Where-Object {
@@ -68,13 +68,36 @@ try {
     }
 
     #─────────────────────────────────────────────────────────────────
-    # Additional: explicitly kill any CiscoCollabHost.exe instances
+    # Step 2b: explicitly terminate any CiscoLauncher instances
+    #─────────────────────────────────────────────────────────────────
+    Get-Process -Name CiscoSparkLauncher -ErrorAction SilentlyContinue |
+    ForEach-Object {
+        Write-Output "Stopping CiscoSparkLauncher (PID $($_.Id))"
+        Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+    }
+
+    # wait for any CiscoSparkLauncher to exit
+    while ( Get-Process -Name CiscoSparkLauncher -ErrorAction SilentlyContinue ) {
+        Write-Output 'Waiting for CiscoSparkLauncher to terminate…'
+        Start-Sleep -Seconds 1
+    }
+    
+    #─────────────────────────────────────────────────────────────────
+    # Step 2c: explicitly terminate any CiscoCollabHost.exe instances
     #─────────────────────────────────────────────────────────────────
     Get-Process -Name CiscoCollabHost -ErrorAction SilentlyContinue |
         ForEach-Object {
             Write-Output "Stopping leftover CiscoCollabHost.exe (PID $($_.Id))"
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
+    
+    # wait for any CiscoCollabHost.exe to exit
+    while ( Get-Process -Name CiscoCollabHost -ErrorAction SilentlyContinue ) {
+        Write-Output 'Waiting for CiscoCollabHost.exe to terminate…'
+        Stop-Process -Name CiscoCollabHost -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Milliseconds 500
+    }
+
 
     ##───────────────────────────────────────────────────────────────
     ## Step 3: Silent MSI uninstall for each detected registry entry
